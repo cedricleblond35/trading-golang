@@ -1,0 +1,110 @@
+run:
+  tests: false
+  timeout: 5m  # Default timout will result in frequent errors in CDS.
+  skip-dirs:
+    - ".*\\.pb\\.go"
+    - test
+    - vendor
+    - grifts
+    - tools
+
+# We will try to uncomment linter one by one by examining impact and releavance
+linters:
+  disable-all: true
+  enable:
+    - asciicheck
+    - bidichk
+    # - bodyclose
+    # - contextcheck
+    # - cyclop
+    # - depguard # May be cool but useless, we need to check by ourself the trustability of a dependency/repository
+    - dogsled
+    # - dupl
+    - durationcheck
+    - errcheck
+    - errname
+    # - errorlint
+    # - exhaustive
+    - exportloopref
+    # - forbidigo # this one might be used for checking formatting without parameters
+    # - forcetypeassert
+    # - funlen
+    # # These linters needs to refactor the application => postpone TODO
+    # # Details: https://peter.bourgon.org/blog/2017/06/09/theory-of-modern-go.html
+    # # - gochecknoglobals
+    # # - gochecknoinits
+    # - gocognit
+    # - goconst
+    # - gocritic
+    # - gocyclo
+    # - godot
+    # - goerr113
+    - gofumpt
+    - goheader
+    - goimports
+    # - gomnd
+    # - gomoddirectives
+    # - gomodguard
+    - goprintffuncname
+    # - gosec
+    - gosimple
+    - govet
+    - importas
+    - ineffassign
+    # - ireturn
+    - makezero
+    - misspell
+    # - nestif
+    - nilerr
+    # - nilnil
+    # - nlreturn
+    # - noctx
+    - nolintlint
+    - paralleltest
+    # - prealloc
+    - predeclared
+    - promlinter
+    # - revive
+    # - rowserrcheck # disabled until it supports generics
+    # - sqlclosecheckoccurrence # disabled until it supports generics
+    - staticcheck
+    # - stylecheck
+    - tenv
+    - testpackage
+    - thelper
+    - typecheck
+    - unconvert
+    # - unparam
+    - unused
+    # - varnamelen
+    # - wastedassign # disabled until it supports generics
+    # - whitespace
+    # - wrapcheck
+    # - wsl
+
+  # the list below is commented since we disable-all by default, but we can keep justification here
+  # disabled:
+  # - tparallel # same as paralleltest
+  # - gofmt # gofumpt is stricter
+  # - gci # duplicate with goimports
+  # - godox # we're not going to resolve all our TODOs soon...
+  # - tagliatelle # we're not going to rename all our json fields
+
+# some linter can also have specific configuration
+# https://golangci-lint.run/usage/linters/#staticcheck
+linters-settings:
+  goimports:
+    # Put imports beginning with prefix after 3rd-party packages.
+    # It's a comma-separated list of prefixes.
+    local-prefixes: stash.ovh.net
+
+  gofumpt:
+    # Select the Go version to target.
+    # Default: 1.15
+    lang-version: "1.20"
+    # Choose whether to use the extra rules.
+    # Default: false
+    extra-rules: false
+
+  staticcheck:
+    checks: ["all", "-SA1019"] # TODO: disable deprecated check until migration to libgo's `distributed' and `database' packages is done.

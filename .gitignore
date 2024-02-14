@@ -1,0 +1,13 @@
+TODO.md
+.envrc
+vault.json
+locker.yml
+compose*.yml
+.ansible-vault
+go.work
+go.work.sum
+*.test
+
+
+# IDE
+.vscode/
