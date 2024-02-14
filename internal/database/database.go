@@ -9,6 +9,7 @@ type Client interface {
 	Ping() error
 	// Load loads the entry from database according to the query.
 	Load(m model.Model, query string, args ...any) error
+	LoadLast(m model.Model, query string, args ...any) error
 	// Load loads the entry from database according to the array query.
 	Loads(m any, query string, args ...any) error
 	// Create inserts the entry in database with the given model.

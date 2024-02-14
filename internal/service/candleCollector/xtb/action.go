@@ -12,13 +12,12 @@ type ArgsLogin struct {
 	Password string `json:"password"`
 }
 
-
 type ResponseConn struct {
 	Status          bool   `json:"status"`
 	StreamSessionID string `json:"streamSessionId"`
 }
 
-///////////////////////////////////////////////////////
+// /////////////////////////////////////////////////////
 type GetChartRangeRequest struct {
 	Command   string `json:"command"`
 	Arguments struct {
@@ -48,7 +47,6 @@ type ArgsInfoGetChartRangeRequest struct {
 	Ticks  int    `json:"ticks"`
 }
 
-
 // /////////////////////////////////////////////////////////////////////
 type GetChartLastRequest struct {
 	Command   string `json:"command"`
@@ -72,14 +70,15 @@ type ArgsInfogetChartLastRequest struct {
 	Start  int64  `json:"start"`
 	Symbol string `json:"symbol"`
 }
-///////////////////////////////////////////////////////////////////////
+
+// /////////////////////////////////////////////////////////////////////
 type ResponseChartLastRequest struct {
 	Status     bool `json:"status"`
 	ReturnData struct {
 		Digits    int `json:"digits"`
 		RateInfos []struct {
 			Close     float64 `json:"close"`
-			Ctm       int32   `json:"ctm"`
+			Ctm       int64   `json:"ctm"`
 			CtmString string  `json:"ctmString"`
 			High      float64 `json:"high"`
 			Low       float64 `json:"low"`

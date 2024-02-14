@@ -7,27 +7,27 @@ import (
 )
 
 type (
-	candleUS100 struct {
+	CandleUS100 struct {
 		ID     int           `gorm:"type:bigint(20);column:id;autoIncrement"`
-		Ctm    sql.NullInt32 `gorm:"type:bigint(20);column:ctm"`
-		Close  float32       `gorm:"type:decimal(13,9);column:close"`
-		High   float32       `gorm:"type:decimal(13,9);column:high"`
-		Low    float32       `gorm:"type:decimal(13,9);column:low"`
-		Open   float32       `gorm:"type:decimal(13,9);column:open"`
+		Ctm    sql.NullInt64 `gorm:"type:bigint(20);column:ctm;index,unique,composite:candleuniq_id"`
+		Close  sql.NullInt32 `gorm:"type:int(8);column:close"`
+		High   sql.NullInt32 `gorm:"type:int(8);column:high"`
+		Low    sql.NullInt32 `gorm:"type:int(8);column:low"`
+		Open   sql.NullInt32 `gorm:"type:int(8);column:open"`
 		Vol    sql.NullInt32 `gorm:"type:int;column:vol"`
-		Period uint16        `gorm:"type:int;column:period"`
+		Period sql.NullInt16 `gorm:"type:int;column:period;index,unique,composite:candleuniq_id"`
 	}
 )
 
-func NewCandle() *candleUS100 {
-	return &candleUS100{}
+func NewCandle() *CandleUS100 {
+	return &CandleUS100{}
 }
 
-func (o *candleUS100) Database() string {
+func (o *CandleUS100) Database() string {
 	return config.Database
 }
 
-func (o *candleUS100) TableName() string {
+func (o *CandleUS100) TableName() string {
 	return "candleUS100"
 }
 

@@ -40,6 +40,11 @@ func (c *GORM) Create(m model.Model) error {
 	return c.db.Create(m).Error
 }
 
+// Create implements Client if it isn't exist
+func  (c *GORM) FirstOrCreate(m model.Model) error {
+	return c.db.FirstOrCreate(m).Error
+}
+
 // Delete implements Client.
 func (c *GORM) Delete(m model.Model) error {
 	return c.db.Delete(m).Error
@@ -53,6 +58,11 @@ func (*GORM) IsNotFound(err error) bool {
 // Load implements Client.
 func (c *GORM) Load(m model.Model, query string, args ...any) error {
 	return c.db.Where(query, args...).Take(m).Error
+}
+
+// Load implements Client.
+func (c *GORM) LoadLast(m model.Model, query string, args ...any) error {
+	return c.db.Where(query, args...).Last(m).Error
 }
 
 // Loads implements Client.

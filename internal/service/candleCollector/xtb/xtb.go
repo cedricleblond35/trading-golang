@@ -1,6 +1,7 @@
 package xtb
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
 )
 
 type XTB struct {
@@ -79,12 +81,12 @@ func (xtb *XTB) Login(user, password string) error {
 		return err
 	}
 	xtb.status = rc.Status
-	fmt.Println("connecté:", rc.Status)
+	fmt.Println("connected to xtb:", rc.Status)
 	return nil
 }
 
 func (xtb *XTB) Collected(symbol string, period int) error {
-	ticker := time.NewTicker(1 * time.Second)
+	ticker := time.NewTicker(15 * time.Second)
 	messageOut := make(chan []byte, 1)
 	interrupt := make(chan struct{})
 	quit := make(chan os.Signal, 1)
@@ -93,8 +95,6 @@ func (xtb *XTB) Collected(symbol string, period int) error {
 		defer close(interrupt)
 		for t := range ticker.C {
 			fmt.Println("tick à :", t)
-			fmt.Println("status :", xtb.status)
-			fmt.Println("PERIOD :", period)
 			if xtb.status {
 				timestamp := time.Now().UTC().UnixMilli()
 				fmt.Println("demande de bougie : ", timestamp)
@@ -103,8 +103,8 @@ func (xtb *XTB) Collected(symbol string, period int) error {
 					Command: "getChartLastRequest",
 					Arguments: ArgsGetChartLastRequest{
 						ArgsInfogetChartLastRequest{
-							Period: 1440,
-							Start:  timestamp - (60*60*24*30)*1000,
+							Period: period,
+							Start:  timestamp - (60*60*1*1)*1000,
 							Symbol: "US100",
 						},
 					},
@@ -148,7 +148,6 @@ func (xtb *XTB) Collected(symbol string, period int) error {
 		}
 	}()
 
-	m := model.NewCandle()
 	for {
 		select {
 		case message := <-messageOut:
@@ -158,30 +157,10 @@ func (xtb *XTB) Collected(symbol string, period int) error {
 				fmt.Println("Error:", err)
 				return nil
 			}
-			info := respData.ReturnData.RateInfos
-			for i, ligne := range info {
-				open := ligne.Open
-				high := ligne.Open + ligne.High
-				low := ligne.Open + ligne.Low
-				close := ligne.Open + ligne.Close
-				s := fmt.Sprintf("%.0f", ligne.Open)
-				fmt.Println("s:", s)
-				pivotCamarilla := model.NewPivot()
-				pivotCamarilla.PivotCamarilla(high, low, close)
-				fmt.Println(i, "date:", ligne.CtmString, "open", open, " | close", ligne.Close)
-				fmt.Println("pivotCamarilla R1:", pivotCamarilla.R1, " R2:", pivotCamarilla.R2, " R3:", pivotCamarilla.R3)
 
-				err := xtb.PDB.Create(m)
-				m.Open = float32(open)
-				m.Close = float32(close)
-				m.Low = float32(low)
-				m.High = float32(high)
-				m.Period = 1440
-				// m.Ctm = ligne.Ctm
-
-				if err != nil {
-					return errors.Wrap(err, "could not create candle record")
-				}
+			err = insertData(respData, period, xtb)
+			if err != nil {
+				return err
 			}
 
 		case <-quit:
@@ -217,4 +196,36 @@ func (xtb *XTB) Collected(symbol string, period int) error {
 
 		}
 	}
+}
+
+func insertData(resp ResponseChartLastRequest, period int, xtb *XTB) error {
+	for _, ligne := range resp.ReturnData.RateInfos {
+		x := model.NewCandle()
+		if err := xtb.PDB.LoadLast(x, "period = ? AND ctm =?", period, ligne.Ctm/1000); errors.Is(err, gorm.ErrRecordNotFound) {
+			open := ligne.Open
+			high := ligne.Open + ligne.High
+			low := ligne.Open + ligne.Low
+			close := ligne.Open + ligne.Close
+			// s := fmt.Sprintf("%.0f", ligne.Open)
+			// fmt.Println("s:", s)
+			// pivotCamarilla := model.NewPivot()
+			// pivotCamarilla.PivotCamarilla(high, low, close)
+			// fmt.Println(i, "date:", ligne.CtmString, "open", open, " | close", ligne.Close, " vol:", ligne.Vol)
+			// fmt.Println("pivotCamarilla R1:", pivotCamarilla.R1, " R2:", pivotCamarilla.R2, " R3:", pivotCamarilla.R3)
+
+			m := model.NewCandle()
+			m.Open = sql.NullInt32{Valid: true, Int32: int32(open)}
+			m.Close = sql.NullInt32{Valid: true, Int32: int32(close)}
+			m.Low = sql.NullInt32{Valid: true, Int32: int32(low)}
+			m.High = sql.NullInt32{Valid: true, Int32: int32(high)}
+			m.Period = sql.NullInt16{Valid: true, Int16: int16(period)}
+			m.Ctm = sql.NullInt64{Valid: true, Int64: ligne.Ctm / 1000}
+			m.Vol = sql.NullInt32{Valid: true, Int32: int32(ligne.Vol)}
+			err := xtb.PDB.Save(m)
+			if err != nil {
+				return errors.Wrap(err, "could not create candle record")
+			}
+		}
+	}
+	return nil
 }

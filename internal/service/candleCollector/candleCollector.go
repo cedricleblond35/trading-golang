@@ -2,6 +2,7 @@ package candlecollector
 
 import (
 	"context"
+	"os"
 
 	"trading/internal/database"
 	"trading/internal/model"
@@ -17,17 +18,15 @@ func Process(ctx context.Context, pdb *database.GORM) error {
 		return err
 	}
 
-	err = x.Login("1502064", "1976Drick!")
+	err = x.Login(os.Getenv("USER"), os.Getenv("PWD"))
 	if err != nil {
 		return err
 	}
 
-	err = x.Collected("US100",int(model.PERIOD_M5))
+	err = x.Collected("US100", int(model.PERIOD_M1))
 	if err != nil {
 		return err
 	}
-
-
 
 	return nil
 }
