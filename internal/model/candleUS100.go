@@ -30,8 +30,3 @@ func (o *CandleUS100) Database() string {
 func (o *CandleUS100) TableName() string {
 	return "candleUS100"
 }
-
-// func (o *Candle) ListFromCharacteristics(ctx context.Context, query string, characteristics ...any) ([]*Candle, error) {
-// 	var candle []Candle
-// 	result :=
-// }

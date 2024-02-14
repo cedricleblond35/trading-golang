@@ -18,7 +18,7 @@ func Process(ctx context.Context, pdb *database.GORM) error {
 		return err
 	}
 
-	err = x.Login(os.Getenv("USER"), os.Getenv("PWD"))
+	err = x.Login(os.Getenv("XTB_USER"), os.Getenv("XTB_PWD"))
 	if err != nil {
 		return err
 	}
