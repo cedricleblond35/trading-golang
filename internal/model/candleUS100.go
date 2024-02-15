@@ -8,14 +8,15 @@ import (
 
 type (
 	CandleUS100 struct {
-		ID     int           `gorm:"type:bigint(20);column:id;autoIncrement"`
-		Ctm    sql.NullInt64 `gorm:"type:bigint(20);column:ctm;index,unique,composite:candleuniq_id"`
-		Close  sql.NullInt32 `gorm:"type:int(8);column:close"`
-		High   sql.NullInt32 `gorm:"type:int(8);column:high"`
-		Low    sql.NullInt32 `gorm:"type:int(8);column:low"`
-		Open   sql.NullInt32 `gorm:"type:int(8);column:open"`
-		Vol    sql.NullInt32 `gorm:"type:int;column:vol"`
-		Period sql.NullInt16 `gorm:"type:int;column:period;index,unique,composite:candleuniq_id"`
+		ID     int             `gorm:"type:bigint(20);column:id;autoIncrement"`
+		Ctm    sql.NullInt64   `gorm:"type:bigint(20);column:ctm;index,unique,composite:candleuniq_id"`
+		Date   string          `gorm:"type:varchar(255);column:date"`
+		Close  sql.NullFloat64 `gorm:"type:int(8);column:close"`
+		High   sql.NullFloat64 `gorm:"type:int(8);column:high"`
+		Low    sql.NullFloat64 `gorm:"type:int(8);column:low"`
+		Open   sql.NullFloat64 `gorm:"type:int(8);column:open"`
+		Vol    sql.NullInt32   `gorm:"type:int;column:vol"`
+		Period sql.NullInt16   `gorm:"type:int;column:period;index,unique,composite:candleuniq_id"`
 	}
 )
 

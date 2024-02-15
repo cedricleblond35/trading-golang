@@ -31,6 +31,11 @@ func NewXTB(pdb *database.GORM) *XTB {
 	}
 }
 
+type Result struct {
+	Candles []byte
+	Period  int
+}
+
 func (xtb *XTB) Connection(host, path string) error {
 	if host == "" {
 		fmt.Println("error host")
@@ -87,14 +92,15 @@ func (xtb *XTB) Login(user, password string) error {
 
 func (xtb *XTB) Collected(symbol string, period int) error {
 	ticker := time.NewTicker(15 * time.Second)
-	messageOut := make(chan []byte, 1)
+	messageOut := make(chan Result, 1)
 	interrupt := make(chan struct{})
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	go func() {
 		defer close(interrupt)
+		period = 1
 		for t := range ticker.C {
-			fmt.Println("tick à :", t)
+			fmt.Println("tick à :", t, " period", period)
 			if xtb.status {
 				timestamp := time.Now().UTC().UnixMilli()
 				fmt.Println("demande de bougie : ", timestamp)
@@ -109,18 +115,6 @@ func (xtb *XTB) Collected(symbol string, period int) error {
 						},
 					},
 				})
-				// jsonDataChartRangeRequest, err := json.Marshal(GetChartRangeRequest{
-				// 	Command: "getChartRangeRequest",
-				// 	Arguments: ArgsGetChartRangeRequest{
-				// 		ArgsInfoGetChartRangeRequest{
-				// 			Start:  timestamp - (60 * 60 * 1000),
-				// 			End:    timestamp,
-				// 			Period: 1,
-				// 			Symbol: "US100",
-				// 			Ticks:  0,
-				// 		},
-				// 	},
-				// })
 				if err != nil {
 					fmt.Println("erreur Marshal:", err)
 					// quit <- os.Kill
@@ -138,7 +132,58 @@ func (xtb *XTB) Collected(symbol string, period int) error {
 				}
 
 				if messageType == websocket.TextMessage {
-					messageOut <- message
+					res := new(Result)
+					res.Candles = message
+					res.Period = period
+					messageOut <- *res
+				} else if messageType == websocket.BinaryMessage {
+					// handle binary message
+				} else if messageType == websocket.CloseMessage {
+					// handle close message
+				}
+			}
+		}
+	}()
+	go func() {
+		defer close(interrupt)
+		period := 5
+		for t := range ticker.C {
+			fmt.Println("tick à :", t, " period", period)
+			if xtb.status {
+				timestamp := time.Now().UTC().UnixMilli()
+				fmt.Println("demande de bougie : ", timestamp)
+
+				jsonDataChartRangeRequest, err := json.Marshal(GetChartLastRequest{
+					Command: "getChartLastRequest",
+					Arguments: ArgsGetChartLastRequest{
+						ArgsInfogetChartLastRequest{
+							Period: period,
+							Start:  timestamp - (60*60*1*1)*1000,
+							Symbol: "US100",
+						},
+					},
+				})
+				if err != nil {
+					fmt.Println("erreur Marshal:", err)
+					// quit <- os.Kill
+				}
+
+				if err := xtb.Conn.WriteMessage(websocket.TextMessage, jsonDataChartRangeRequest); err != nil {
+					fmt.Println("erreur Marshal:", err)
+					log.Println(err)
+				}
+				messageType, message, err := xtb.Conn.ReadMessage()
+				if err != nil {
+					fmt.Println("erreur ReadMessage:", err)
+					xtb.Conn.Close()
+					break
+				}
+
+				if messageType == websocket.TextMessage {
+					res := new(Result)
+					res.Candles = message
+					res.Period = period
+					messageOut <- *res
 				} else if messageType == websocket.BinaryMessage {
 					// handle binary message
 				} else if messageType == websocket.CloseMessage {
@@ -152,13 +197,13 @@ func (xtb *XTB) Collected(symbol string, period int) error {
 		select {
 		case message := <-messageOut:
 			var respData ResponseChartLastRequest
-			err := json.Unmarshal([]byte(message), &respData)
+			err := json.Unmarshal(message.Candles, &respData)
 			if err != nil {
 				fmt.Println("Error:", err)
 				return nil
 			}
 
-			err = insertData(respData, period, xtb)
+			err = insertData(respData, message.Period, xtb)
 			if err != nil {
 				return err
 			}
@@ -199,27 +244,23 @@ func (xtb *XTB) Collected(symbol string, period int) error {
 }
 
 func insertData(resp ResponseChartLastRequest, period int, xtb *XTB) error {
+	// resp.ReturnData.RateInfos = resp.ReturnData.RateInfos[:len(resp.ReturnData.RateInfos)-1]
 	for _, ligne := range resp.ReturnData.RateInfos {
 		x := model.NewCandle()
 		if err := xtb.PDB.LoadLast(x, "period = ? AND ctm =?", period, ligne.Ctm/1000); errors.Is(err, gorm.ErrRecordNotFound) {
-			open := ligne.Open
-			high := ligne.Open + ligne.High
-			low := ligne.Open + ligne.Low
-			close := ligne.Open + ligne.Close
-			// s := fmt.Sprintf("%.0f", ligne.Open)
-			// fmt.Println("s:", s)
-			// pivotCamarilla := model.NewPivot()
-			// pivotCamarilla.PivotCamarilla(high, low, close)
-			// fmt.Println(i, "date:", ligne.CtmString, "open", open, " | close", ligne.Close, " vol:", ligne.Vol)
-			// fmt.Println("pivotCamarilla R1:", pivotCamarilla.R1, " R2:", pivotCamarilla.R2, " R3:", pivotCamarilla.R3)
+			open := ligne.Open / 100
+			high := (ligne.Open + ligne.High) / 100
+			low := (ligne.Open + ligne.Low) / 100
+			close := (ligne.Open + ligne.Close) / 100
 
 			m := model.NewCandle()
-			m.Open = sql.NullInt32{Valid: true, Int32: int32(open)}
-			m.Close = sql.NullInt32{Valid: true, Int32: int32(close)}
-			m.Low = sql.NullInt32{Valid: true, Int32: int32(low)}
-			m.High = sql.NullInt32{Valid: true, Int32: int32(high)}
+			m.Open = sql.NullFloat64{Valid: true, Float64: open}
+			m.Close = sql.NullFloat64{Valid: true, Float64: close}
+			m.Low = sql.NullFloat64{Valid: true, Float64: low}
+			m.High = sql.NullFloat64{Valid: true, Float64: high}
 			m.Period = sql.NullInt16{Valid: true, Int16: int16(period)}
 			m.Ctm = sql.NullInt64{Valid: true, Int64: ligne.Ctm / 1000}
+			m.Date = ligne.CtmString
 			m.Vol = sql.NullInt32{Valid: true, Int32: int32(ligne.Vol)}
 			err := xtb.PDB.Save(m)
 			if err != nil {
