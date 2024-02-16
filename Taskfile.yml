@@ -1,0 +1,47 @@
+# https://taskfile.org
+
+version: "3"
+
+tasks:
+  default:
+    desc: Run `build' task.
+    cmds:
+      - task: build
+
+  vendor:
+    desc: Vendor voipgo dependecies.
+    cmds:
+      - go mod tidy
+      - go mod vendor
+      # Prune
+      - find vendor -type f {{.FILTER | splitList "\n" | join " " }} -delete
+    vars:
+      FILTER: |
+        ! -name 'modules.txt'
+        ! -name '*.sum'
+        ! -name '*.mod'
+        ! -name '*.go'
+        ! -name '*.s'
+        ! -name '*.c'
+        ! -name '*.h'
+
+  lint:
+    desc: Run linters
+    cmds:
+      - which golangci-lint > /dev/null || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.53.2
+      - golangci-lint run
+
+  format:
+    desc: Format imports and code
+    cmds:
+      - which goimports > /dev/null || go install golang.org/x/tools/cmd/goimports@latest
+      - which gofumpt > /dev/null || go install mvdan.cc/gofumpt@latest
+      - find . -name '*.go' -not -path './vendor*' -not -path '*.pb.go' -not -path './grifts' -not -path './tools' -not -path './test' -exec gofumpt -w {} \; -exec goimports -w -local "stash.ovh.net/" {} \;
+
+  test:
+    desc: Run tests.
+    cmds:
+      - which gotestsum > /dev/null || go install gotest.tools/gotestsum@latest
+      # Inliner tuning: https://github.com/bouk/monkey#notes
+      - gotestsum -- -gcflags=-l -coverprofile=cover.out ./...
+

@@ -40,7 +40,7 @@ func (c *GORM) Create(m model.Model) error {
 }
 
 // Create implements Client if it isn't exist
-func  (c *GORM) FirstOrCreate(m model.Model) error {
+func (c *GORM) FirstOrCreate(m model.Model) error {
 	return c.db.FirstOrCreate(m).Error
 }
 

@@ -25,7 +25,7 @@ const (
 	PERIOD_M30 Period = 30
 	PERIOD_H1  Period = 60
 	PERIOD_H4  Period = 240
-	PERIOD_D1  int = 1440
+	PERIOD_D1  int    = 1440
 	PERIOD_W1  Period = 10080
 	PERIOD_MN1 Period = 43200
 )

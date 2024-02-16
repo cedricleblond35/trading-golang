@@ -1,20 +1,19 @@
-package xtb
+package candlecollector
 
-type Login struct {
-	Command   string `json:"command"`
-	Arguments struct {
-		UserID   string `json:"userId"`
-		Password string `json:"password"`
-	} `json:"arguments"`
-}
-type ArgsLogin struct {
-	UserID   string `json:"userId"`
-	Password string `json:"password"`
-}
-
-type ResponseConn struct {
-	Status          bool   `json:"status"`
-	StreamSessionID string `json:"streamSessionId"`
+type ResponseChartLastRequest struct {
+	Status     bool `json:"status"`
+	ReturnData struct {
+		Digits    int `json:"digits"`
+		RateInfos []struct {
+			Close     float64 `json:"close"`
+			Ctm       int64   `json:"ctm"`
+			CtmString string  `json:"ctmString"`
+			High      float64 `json:"high"`
+			Low       float64 `json:"low"`
+			Open      float64 `json:"open"`
+			Vol       float64 `json:"vol"`
+		} `json:"rateInfos"`
+	} `json:"returnData"`
 }
 
 // /////////////////////////////////////////////////////
@@ -72,18 +71,3 @@ type ArgsInfogetChartLastRequest struct {
 }
 
 // /////////////////////////////////////////////////////////////////////
-type ResponseChartLastRequest struct {
-	Status     bool `json:"status"`
-	ReturnData struct {
-		Digits    int `json:"digits"`
-		RateInfos []struct {
-			Close     float64 `json:"close"`
-			Ctm       int64   `json:"ctm"`
-			CtmString string  `json:"ctmString"`
-			High      float64 `json:"high"`
-			Low       float64 `json:"low"`
-			Open      float64 `json:"open"`
-			Vol       float64 `json:"vol"`
-		} `json:"rateInfos"`
-	} `json:"returnData"`
-}

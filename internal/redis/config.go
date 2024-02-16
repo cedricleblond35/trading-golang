@@ -1,6 +1,5 @@
 package redis
 
-
 // Defines the types of configuration.
 const (
 	TypeRedis    = "redis"

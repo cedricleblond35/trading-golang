@@ -2,10 +2,10 @@ package order
 
 import (
 	"context"
-	"fmt"
+	"os"
 
 	"trading/internal/database"
-	"trading/internal/redis"
+	"trading/internal/xtb"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -27,22 +27,17 @@ func action(c *cobra.Command, _ []string) error {
 		return errors.Wrap(err, "could not connect to database")
 	}
 
-	rdb, err := redis.NewRedis()
+	// Connection XTB
+	xtbConn := xtb.NewXTB()
+	err = xtbConn.Connection("ws.xtb.com", "/real")
 	if err != nil {
-		return errors.Wrap(err, "could not create redis client")
+		return err
 	}
 
-	// test
-	err = rdb.Set(ctx, "key", "value", 0).Err()
+	err = xtbConn.Login(os.Getenv("XTB_USER"), os.Getenv("XTB_PWD"))
 	if err != nil {
-		panic(err)
+		return err
 	}
-
-	val, err := rdb.Get(ctx, "key").Result()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("key", val)
 
 	return nil
 }
