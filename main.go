@@ -7,7 +7,6 @@ import (
 
 	"trading/cmd/candleCollector"
 	"trading/cmd/indicator"
-	"trading/cmd/order"
 	"trading/internal/config"
 
 	"github.com/spf13/cobra"
@@ -20,7 +19,6 @@ func main() {
 	}
 	c.AddCommand(candleCollector.Command)
 	c.AddCommand(indicator.Command)
-	c.AddCommand(order.Command)
 	c.AddCommand(&cobra.Command{
 		Use:   "version",
 		Short: "Version for trading",

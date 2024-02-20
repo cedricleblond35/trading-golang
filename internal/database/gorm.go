@@ -65,8 +65,8 @@ func (c *GORM) LoadLast(m model.Model, query string, args ...any) error {
 }
 
 // Loads implements Client.
-func (c *GORM) Loads(m any, query string, args ...any) error {
-	return c.db.Where(query, args...).Find(m).Error
+func (c *GORM) Loads(m any, limit, offset int, query string, args ...any) error {
+	return c.db.Where(query, args...).Limit(limit).Offset(offset).Find(m).Error
 }
 
 // Ping implements Client.

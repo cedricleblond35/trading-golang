@@ -11,6 +11,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+
 )
 
 var Command = &cobra.Command{
@@ -53,13 +54,8 @@ func action(c *cobra.Command, _ []string) error {
 		panic(err)
 	}
 
-	// err = rdb.Set(ctx, "xtbConn", xtbConn.Conn, 0).Err()
-	// if err != nil {
-	// 	panic(err)
-	// }
-
 	// candle
-	cc := candlecollectorPkg.NewCandleCollector(ctx, pdb, xtbConn)
+	cc := candlecollectorPkg.NewCandleCollector(ctx, pdb, xtbConn, rdb)
 	err = cc.Collected("US100")
 	if err != nil {
 		return err

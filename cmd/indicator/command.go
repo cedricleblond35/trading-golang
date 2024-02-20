@@ -2,10 +2,10 @@ package indicator
 
 import (
 	"context"
-	"fmt"
 
 	"trading/internal/database"
 	"trading/internal/redis"
+	indicatorsPkg "trading/internal/service/indicators"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -22,7 +22,7 @@ var Command = &cobra.Command{
 func action(c *cobra.Command, _ []string) error {
 	ctx := context.Background()
 
-	_, err := database.GormOpen(ctx, false)
+	pdb, err := database.GormOpen(ctx, false)
 	if err != nil {
 		return errors.Wrap(err, "could not connect to database")
 	}
@@ -32,17 +32,12 @@ func action(c *cobra.Command, _ []string) error {
 		return errors.Wrap(err, "could not create redis client")
 	}
 
-	// test
-	err = rdb.Set(ctx, "key", "value", 0).Err()
+	//////////////////////////////////////////////////////////////////////////////////////////////////
+	indicators := indicatorsPkg.NewIndicator(ctx, pdb, rdb)
+	err = indicators.Calcul()
 	if err != nil {
-		panic(err)
+		return err
 	}
-
-	val, err := rdb.Get(ctx, "key").Result()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("key", val)
 
 	return nil
 }
