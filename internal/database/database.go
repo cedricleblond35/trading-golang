@@ -12,6 +12,8 @@ type Client interface {
 	LoadLast(m model.Model, query string, args ...any) error
 	// Load loads the entry from database according to the array query.
 	Loads(m any, query string, args ...any) error
+	// Load loads the entry from database according to the array query.
+	LoadsDESC(m any, query string, args ...any) error
 	// Create inserts the entry in database with the given model.
 	Create(m model.Model) error
 	// Save inserts (if no primary key is given) or updates the entry in database with the given model.

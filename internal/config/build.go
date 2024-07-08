@@ -3,7 +3,7 @@ package config
 import "fmt"
 
 const (
-	Database = "trading"
+	Database = "manager-tv130589"
 )
 
 var (

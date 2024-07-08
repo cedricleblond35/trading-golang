@@ -102,23 +102,41 @@ func (indicator *Indicator) Calcul() error {
 		return err
 	}
 
-	err = indicator.PivotCamarilla(indicator.candle.High.Float64, indicator.candle.Low.Float64, indicator.candle.Close.Float64)
+	fmt.Println("============>date:", indicator.candle)
+
+	// err = indicator.PivotCamarilla(indicator.candle.High.Float64, indicator.candle.Low.Float64, indicator.candle.Close.Float64)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// r1 := indicator.redis.Get(indicator.ctx, "pc.r1")
+	// fmt.Println("Camarilla R1:", r1)
+	// err = indicator.PivotWoodie(indicator.candle.High.Float64, indicator.candle.Low.Float64, indicator.candle.Close.Float64)
+	// if err != nil {
+	// 	return err
+	// }
+
+	err = indicator.pdb.LoadsDESC(&indicator.candles, 100, -1, "period = ?", 5)
 	if err != nil {
 		return err
 	}
 
-	err = indicator.PivotWoodie(indicator.candle.High.Float64, indicator.candle.Low.Float64, indicator.candle.Close.Float64)
-	if err != nil {
-		return err
-	}
+	// fmt.Printf("indicator.candles: %+v\n", indicator.candles)
+	// fmt.Println("--------------------------------------------------------------------")
+	candles := reverse(indicator.candles)
+	fmt.Printf("candles inver: %+v\n", candles)
 
-	err = indicator.pdb.Loads(&indicator.candles, 10, 1, "period = ? AND ctm < ?", 1440, timestamp)
-	if err != nil {
-		return err
-	}
 	st := model.NewSupertrend()
-	s := st.Calcul(indicator.candles)
-	fmt.Println(s)
+	st.Calcul(candles)
+	fmt.Println("---------------->", st.Get())
 
 	return nil
+}
+
+func reverse(numbers []model.CandleUS100) []model.CandleUS100 {
+	newCandles := make([]model.CandleUS100, 0, len(numbers))
+	for i := len(numbers) - 1; i >= 0; i-- {
+		newCandles = append(newCandles, numbers[i])
+	}
+	return newCandles
 }

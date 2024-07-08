@@ -92,15 +92,15 @@ func (cc *CandleCollector) Collected(symbol string) error {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 
-	offset := 60 * 3 // 5m
+	offset := 60 * 60 * 12 // 12h
 	go takeCandle(messageOut, interrupt, ticker, cc.xtbConn, 1, offset)
-	offset = 60 * 15 // 30 min
+	offset = 60 * 60 * 48 // 48 h
 	go takeCandle(messageOut, interrupt, ticker, cc.xtbConn, 5, offset)
-	offset = 60 * 45 // 45 min
+	offset = 60 * 60 * 24 * 5 // 45 min
 	go takeCandle(messageOut, interrupt, ticker, cc.xtbConn, 15, offset)
-	offset = 60 * 60 * 12 // 12h
+	offset = 60 * 60 * 24 * 5 // 12h
 	go takeCandle(messageOut, interrupt, ticker, cc.xtbConn, 240, offset)
-	offset = 60 * 60 * 24 * 60 // 12h
+	offset = 60 * 60 * 24 * 120 // 12h
 	go takeCandle(messageOut, interrupt, ticker, cc.xtbConn, 1440, offset)
 
 	for {

@@ -69,6 +69,10 @@ func (c *GORM) Loads(m any, limit, offset int, query string, args ...any) error 
 	return c.db.Where(query, args...).Limit(limit).Offset(offset).Find(m).Error
 }
 
+func (c *GORM) LoadsDESC(m any, limit, offset int, query string, args ...any) error {
+	return c.db.Where(query, args...).Order("ctm desc").Limit(limit).Offset(offset).Find(m).Error
+}
+
 // Ping implements Client.
 func (c *GORM) Ping() error {
 	if c.db == nil {
